@@ -1,0 +1,16 @@
+{
+  "name": "crafely-tiptap-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.11.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:vue": "pnpm --filter @crafely/tiptap-vue dev",
+    "dev:nuxt": "pnpm --filter nuxt-tiptap dev",
+    "lint": "eslint ."
+  }
+}
