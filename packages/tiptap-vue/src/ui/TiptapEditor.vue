@@ -466,8 +466,8 @@ const tableButtons = [
     <EditorContent
       :editor="editor"
       :class="[
-        'prose prose-neutral dark:prose-invert max-w-none',
-        'min-h-[220px] rounded-md border p-3 outline-none focus-within:ring-1 dark:border-neutral-700',
+        'prose prose-neutral dark:prose-invert max-w-none editor-content',
+        'rounded-md border border-neutral-200 p-3 outline-none transition-colors focus-within:border-neutral-400 dark:border-neutral-700 dark:focus-within:border-neutral-500',
         editorClass,
       ]"
     />
@@ -475,6 +475,18 @@ const tableButtons = [
 </template>
 
 <style scoped>
+/* Editor container with customizable min-height */
+:deep(.ProseMirror) {
+  min-height: var(--tiptap-editor-min-height, 220px);
+  outline: none !important;
+  border: none !important;
+}
+
+/* Remove the hardcoded min-height from Tailwind and use CSS variable instead */
+.editor-content {
+  min-height: var(--tiptap-editor-min-height, 220px);
+}
+
 /* basic prose resets to play nice with Tailwind typography if used */
 .prose :where(table) {
   width: 100%;

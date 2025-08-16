@@ -27,4 +27,16 @@ html.dark body {
   background: #0a0a0a;
   color: #fafafa;
 }
+
+/* Customize the editor min-height using CSS variables */
+:root {
+  --tiptap-editor-min-height: 300px;
+}
+
+/* Example of responsive min-height */
+@media (max-width: 768px) {
+  :root {
+    --tiptap-editor-min-height: 200px;
+  }
+}
 </style>
