@@ -1,3 +1,3 @@
 export * from "./plugin";
 export * from "./types";
-export { default as TiptapEditor } from "./ui/TiptapEditor.vue";
+export { SlashCommand } from "./extensions/slash-command";

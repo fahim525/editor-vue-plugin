@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, watch, toRef } from "vue";
+import { computed, onBeforeUnmount, watch, toRef, ref } from "vue";
 import {
   EditorContent,
   useEditor,
@@ -19,6 +19,7 @@ import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Typography from "@tiptap/extension-typography";
+import TextAlign from "@tiptap/extension-text-align";
 
 import { SlashCommand } from "../extensions/slash-command";
 import type { JSONContent } from "@tiptap/core";
@@ -50,6 +51,8 @@ import {
   Redo,
   Link as LinkIcon,
   Image as ImageIcon,
+  Sun,
+  Moon,
 } from "lucide-vue-next";
 
 const props = withDefaults(defineProps<TiptapEditorProps>(), {
@@ -74,6 +77,24 @@ const emit = defineEmits<{
   (e: "blur"): void;
   (e: "selectionUpdate"): void;
 }>();
+
+// Dark mode state
+const isDarkMode = ref(false);
+
+function toggleDarkMode() {
+  isDarkMode.value = !isDarkMode.value;
+  document.documentElement.classList.toggle("dark", isDarkMode.value);
+
+  // Update editor content styling
+  if (editor?.value) {
+    const editorElement = editor.value.view.dom;
+    if (isDarkMode.value) {
+      editorElement.classList.add("dark");
+    } else {
+      editorElement.classList.remove("dark");
+    }
+  }
+}
 
 const resolvedVariant = computed<EditorVariant>(
   () => props.variant ?? getTiptapDefaults().variant
@@ -107,6 +128,9 @@ function buildPresetExtensions(preset: EditorPreset) {
     TableCell,
     Typography,
     SlashCommand,
+    TextAlign.configure({
+      types: ["heading", "paragraph"],
+    }),
   ];
 
   if (preset === "starter") {
@@ -268,6 +292,21 @@ function toggleLink() {
   ed.chain().focus().setLink({ href: url }).run();
 }
 
+// Text alignment functions
+function setTextAlign(align: "left" | "center" | "right" | "justify") {
+  if (!editor?.value) return;
+
+  // Use TipTap's built-in text alignment commands
+  editor.value.chain().focus().setTextAlign(align).run();
+}
+
+function isTextAlignActive(align: "left" | "center" | "right" | "justify") {
+  if (!editor?.value) return false;
+
+  // Use TipTap's built-in text alignment check
+  return editor.value.isActive({ textAlign: align });
+}
+
 function insertTable() {
   editor?.value
     ?.chain()
@@ -403,50 +442,278 @@ const tableButtons = [
   <div class="relative w-full">
     <div
       v-if="resolvedVariant === 'top-sticky'"
-      class="sticky top-0 z-40 -mx-2 mb-2 flex flex-wrap gap-1 rounded-md border bg-white/80 p-2 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:border-neutral-700 dark:bg-neutral-900/70 dark:supports-[backdrop-filter]:bg-neutral-900/50"
+      class="sticky top-0 z-40 -mx-2 mb-2 flex flex-wrap items-center gap-1 rounded-lg border border-gray-200 bg-white/95 p-2 backdrop-blur-sm supports-[backdrop-filter]:bg-white/90 dark:border-gray-700 dark:bg-gray-900/95 dark:supports-[backdrop-filter]:bg-gray-900/90 shadow-sm"
     >
+      <!-- 1. History Controls -->
+      <div class="flex items-center gap-1">
+        <button
+          title="Undo"
+          class="rounded p-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
+          @click="undo"
+        >
+          <Undo :size="16" />
+        </button>
+        <button
+          title="Redo"
+          class="rounded p-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          @click="redo"
+        >
+          <Redo :size="16" />
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-px bg-gray-300 dark:bg-gray-600" />
+
+      <!-- 2. Structure/Block Type Controls -->
+      <div class="flex items-center gap-1">
+        <button
+          title="Heading"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('heading')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="setHeading(1)"
+        >
+          <Heading1 :size="16" />
+        </button>
+        <button
+          title="Bullet List"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('bulletList')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleBullet"
+        >
+          <List :size="16" />
+        </button>
+        <button
+          title="Numbered List"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('orderedList')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleOrdered"
+        >
+          <ListOrdered :size="16" />
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-px bg-gray-300 dark:bg-gray-600" />
+
+      <!-- 3. Text Formatting Controls -->
+      <div class="flex items-center gap-1">
+        <button
+          title="Code Block"
+          :class="[
+            'rounded-full p-1.5 text-sm transition-colors border',
+            isActive('codeBlock')
+              ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border-transparent',
+          ]"
+          @click="toggleCodeBlock"
+        >
+          <Code :size="16" />
+        </button>
+        <button
+          title="Bold"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('bold')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleBold"
+        >
+          <Bold :size="16" />
+        </button>
+        <button
+          title="Italic"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('italic')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleItalic"
+        >
+          <Italic :size="16" />
+        </button>
+        <button
+          title="Strikethrough"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('strike')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleStrike"
+        >
+          <Strikethrough :size="16" />
+        </button>
+        <button
+          title="Code"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('code')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleCode"
+        >
+          <Code :size="16" />
+        </button>
+        <button
+          title="Underline"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('underline')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleUnderline"
+        >
+          <UnderlineIcon :size="16" />
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-px bg-gray-300 dark:bg-gray-600" />
+
+      <!-- 4. Advanced Formatting/Insertion Controls -->
+      <div class="flex items-center gap-1">
+        <button
+          title="Link"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isActive('link')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="toggleLink"
+        >
+          <LinkIcon :size="16" />
+        </button>
+        <button
+          title="Superscript"
+          class="rounded p-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
+          @click="() => {}"
+        >
+          <span class="text-xs font-bold">x²</span>
+        </button>
+        <button
+          title="Subscript"
+          class="rounded p-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
+          @click="() => {}"
+        >
+          <span class="text-xs font-bold">x₂</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-px bg-gray-300 dark:bg-gray-600" />
+
+      <!-- 5. Alignment Controls -->
+      <div class="flex items-center gap-1">
+        <button
+          title="Left Align"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isTextAlignActive('left')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="setTextAlign('left')"
+        >
+          <div class="flex flex-col gap-0.5">
+            <div class="w-3 h-0.5 bg-current"></div>
+            <div class="w-2 h-0.5 bg-current"></div>
+            <div class="w-3 h-0.5 bg-current"></div>
+          </div>
+        </button>
+        <button
+          title="Center Align"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isTextAlignActive('center')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="setTextAlign('center')"
+        >
+          <div class="flex flex-col gap-0.5">
+            <div class="w-3 h-0.5 bg-current mx-auto"></div>
+            <div class="w-2 h-0.5 bg-current mx-auto"></div>
+            <div class="w-3 h-0.5 bg-current mx-auto"></div>
+          </div>
+        </button>
+        <button
+          title="Right Align"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isTextAlignActive('right')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="setTextAlign('right')"
+        >
+          <div class="flex flex-col gap-0.5">
+            <div class="w-3 h-0.5 bg-current ml-auto"></div>
+            <div class="w-2 h-0.5 bg-current ml-auto"></div>
+            <div class="w-3 h-0.5 bg-current ml-auto"></div>
+          </div>
+        </button>
+        <button
+          title="Justify"
+          :class="[
+            'rounded p-1.5 text-sm transition-colors',
+            isTextAlignActive('justify')
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+          ]"
+          @click="setTextAlign('justify')"
+        >
+          <div class="flex flex-col gap-0.5">
+            <div class="w-3 h-0.5 bg-current"></div>
+            <div class="w-2 h-0.5 bg-current"></div>
+            <div class="w-3 h-0.5 bg-current"></div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-px bg-gray-300 dark:bg-gray-600" />
+
+      <!-- 6. Media/Utility Controls -->
+      <div class="flex items-center gap-1">
+        <button
+          title="Add Image/Media"
+          class="rounded p-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-1"
+          @click="() => {}"
+        >
+          <ImageIcon :size="16" />
+          <span class="text-xs">Add</span>
+        </button>
+      </div>
+
+      <!-- Spacer -->
+      <div class="ml-auto" />
+
+      <!-- Dark Mode Toggle -->
       <button
-        v-for="(btn, i) in topToolbarButtons"
-        :key="i"
-        type="button"
-        :title="btn.label"
-        :class="[
-          'rounded p-2 text-sm transition-colors',
-          btn.isActive()
-            ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
-            : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
-        ]"
-        @click="btn.action()"
+        :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+        class="rounded p-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
+        @click="toggleDarkMode"
       >
-        <component :is="btn.icon" :size="16" />
-      </button>
-      <span
-        class="mx-2 inline-block h-5 w-px bg-neutral-200 dark:bg-neutral-700"
-      />
-      <button
-        v-for="(btn, i) in tableButtons"
-        :key="'t' + i"
-        type="button"
-        :title="btn.label"
-        class="rounded p-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-        @click="btn.action()"
-      >
-        <component :is="btn.icon" :size="16" />
-      </button>
-      <span class="ml-auto" />
-      <button
-        title="Undo"
-        class="rounded p-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-        @click="undo"
-      >
-        <Undo :size="16" />
-      </button>
-      <button
-        title="Redo"
-        class="rounded p-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-        @click="redo"
-      >
-        <Redo :size="16" />
+        <Sun v-if="isDarkMode" :size="16" />
+        <Moon v-else :size="16" />
       </button>
     </div>
 
@@ -597,7 +864,9 @@ const tableButtons = [
       :editor="editor"
       :class="[
         'prose prose-neutral dark:prose-invert max-w-none editor-content',
-        'rounded-md border border-neutral-200 p-3 outline-none transition-colors focus-within:border-neutral-400 dark:border-neutral-700 dark:focus-within:border-neutral-500',
+        'rounded-lg border border-gray-200 p-4 outline-none transition-all duration-200 focus-within:border-blue-400 focus-within:shadow-md focus-within:shadow-blue-100/50 dark:border-gray-600 dark:focus-within:border-blue-500 dark:focus-within:shadow-blue-900/20',
+        'bg-white dark:bg-gray-900',
+        'min-h-[200px]',
         editorClass,
       ]"
     />
@@ -607,14 +876,182 @@ const tableButtons = [
 <style scoped>
 /* Editor container with customizable min-height */
 :deep(.ProseMirror) {
-  min-height: var(--tiptap-editor-min-height, 220px);
+  min-height: var(--tiptap-editor-min-height, 200px);
   outline: none !important;
   border: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  color: #374151;
+  padding: 0;
+}
+
+:deep(.ProseMirror.dark) {
+  color: #d1d5db;
 }
 
 /* Remove the hardcoded min-height from Tailwind and use CSS variable instead */
 .editor-content {
-  min-height: var(--tiptap-editor-min-height, 220px);
+  min-height: var(--tiptap-editor-min-height, 200px);
+}
+
+/* Enhanced prose styling - more compact */
+:deep(.ProseMirror h1) {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #111827;
+}
+
+:deep(.ProseMirror h2) {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+:deep(.ProseMirror h3) {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+:deep(.ProseMirror p) {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+:deep(.ProseMirror ul),
+:deep(.ProseMirror ol) {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.25rem;
+}
+
+:deep(.ProseMirror li) {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+:deep(.ProseMirror blockquote) {
+  border-left: 3px solid #3b82f6;
+  padding-left: 0.75rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+  background: #f8fafc;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+}
+
+:deep(.ProseMirror code) {
+  background: #f1f5f9;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
+    "Courier New", monospace;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+:deep(.ProseMirror pre) {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+:deep(.ProseMirror pre code) {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+:deep(.ProseMirror table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+:deep(.ProseMirror th),
+:deep(.ProseMirror td) {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+:deep(.ProseMirror th) {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+:deep(.ProseMirror td) {
+  background: #ffffff;
+}
+
+:deep(.ProseMirror img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+}
+
+:deep(.ProseMirror a) {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+:deep(.ProseMirror a:hover) {
+  color: #2563eb;
+}
+
+/* Dark mode adjustments */
+:deep(.ProseMirror.dark h1) {
+  color: #f9fafb;
+}
+
+:deep(.ProseMirror.dark h2) {
+  color: #e5e7eb;
+}
+
+:deep(.ProseMirror.dark h3) {
+  color: #d1d5db;
+}
+
+:deep(.ProseMirror.dark blockquote) {
+  background: #1f2937;
+  color: #9ca3af;
+  border-left-color: #60a5fa;
+}
+
+:deep(.ProseMirror.dark code) {
+  background: #374151;
+  color: #fca5a5;
+}
+
+:deep(.ProseMirror.dark th) {
+  background: #374151;
+  color: #d1d5db;
+}
+
+:deep(.ProseMirror.dark td) {
+  background: #1f2937;
 }
 
 /* basic prose resets to play nice with Tailwind typography if used */
@@ -625,5 +1062,46 @@ const tableButtons = [
 .prose :where(td) {
   border: 1px solid var(--tw-prose-borders, rgba(0, 0, 0, 0.1));
   padding: 0.25rem 0.5rem;
+}
+
+/* Text alignment classes */
+:deep(.ProseMirror p[style*="text-align: left"]),
+:deep(.ProseMirror h1[style*="text-align: left"]),
+:deep(.ProseMirror h2[style*="text-align: left"]),
+:deep(.ProseMirror h3[style*="text-align: left"]),
+:deep(.ProseMirror h4[style*="text-align: left"]),
+:deep(.ProseMirror h5[style*="text-align: left"]),
+:deep(.ProseMirror h6[style*="text-align: left"]) {
+  text-align: left;
+}
+
+:deep(.ProseMirror p[style*="text-align: center"]),
+:deep(.ProseMirror h1[style*="text-align: center"]),
+:deep(.ProseMirror h2[style*="text-align: center"]),
+:deep(.ProseMirror h3[style*="text-align: center"]),
+:deep(.ProseMirror h4[style*="text-align: center"]),
+:deep(.ProseMirror h5[style*="text-align: center"]),
+:deep(.ProseMirror h6[style*="text-align: center"]) {
+  text-align: center;
+}
+
+:deep(.ProseMirror p[style*="text-align: right"]),
+:deep(.ProseMirror h1[style*="text-align: right"]),
+:deep(.ProseMirror h2[style*="text-align: right"]),
+:deep(.ProseMirror h3[style*="text-align: right"]),
+:deep(.ProseMirror h4[style*="text-align: right"]),
+:deep(.ProseMirror h5[style*="text-align: right"]),
+:deep(.ProseMirror h6[style*="text-align: right"]) {
+  text-align: right;
+}
+
+:deep(.ProseMirror p[style*="text-align: justify"]),
+:deep(.ProseMirror h1[style*="text-align: justify"]),
+:deep(.ProseMirror h2[style*="text-align: justify"]),
+:deep(.ProseMirror h3[style*="text-align: justify"]),
+:deep(.ProseMirror h4[style*="text-align: justify"]),
+:deep(.ProseMirror h5[style*="text-align: justify"]),
+:deep(.ProseMirror h6[style*="text-align: justify"]) {
+  text-align: justify;
 }
 </style>

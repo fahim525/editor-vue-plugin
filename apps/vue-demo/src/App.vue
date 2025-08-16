@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { TiptapEditor } from "@crafely/tiptap-vue";
+import TiptapEditor from "/Users/fahim/Playground/crafely/editor/packages/tiptap-vue/src/ui/TiptapEditor.vue";
 
 const html = ref<string>("<p>Hello Tiptap!</p>");
 
