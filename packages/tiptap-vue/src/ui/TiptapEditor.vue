@@ -297,22 +297,97 @@ function deleteTable() {
   editor?.value?.chain().focus().deleteTable().run();
 }
 
-const topToolbarButtons = [
-  { label: "Bold", icon: Bold, action: toggleBold },
-  { label: "Italic", icon: Italic, action: toggleItalic },
-  { label: "Underline", icon: UnderlineIcon, action: toggleUnderline },
-  { label: "Strikethrough", icon: Strikethrough, action: toggleStrike },
-  { label: "Code", icon: Code, action: toggleCode },
-  { label: "Paragraph", icon: Type, action: setParagraph },
-  { label: "Heading 1", icon: Heading1, action: () => setHeading(1) },
-  { label: "Heading 2", icon: Heading2, action: () => setHeading(2) },
-  { label: "Heading 3", icon: Heading3, action: () => setHeading(3) },
-  { label: "Bullet List", icon: List, action: toggleBullet },
-  { label: "Ordered List", icon: ListOrdered, action: toggleOrdered },
-  { label: "Quote", icon: Quote, action: toggleBlockquote },
-  { label: "Code Block", icon: FileText, action: toggleCodeBlock },
-  { label: "Horizontal Rule", icon: Minus, action: setHr },
-];
+// Helper functions to check active states
+function isActive(name: string, attributes?: any) {
+  return editor?.value?.isActive(name, attributes) ?? false;
+}
+
+const topToolbarButtons = computed(() => [
+  {
+    label: "Bold",
+    icon: Bold,
+    action: toggleBold,
+    isActive: () => isActive("bold"),
+  },
+  {
+    label: "Italic",
+    icon: Italic,
+    action: toggleItalic,
+    isActive: () => isActive("italic"),
+  },
+  {
+    label: "Underline",
+    icon: UnderlineIcon,
+    action: toggleUnderline,
+    isActive: () => isActive("underline"),
+  },
+  {
+    label: "Strikethrough",
+    icon: Strikethrough,
+    action: toggleStrike,
+    isActive: () => isActive("strike"),
+  },
+  {
+    label: "Code",
+    icon: Code,
+    action: toggleCode,
+    isActive: () => isActive("code"),
+  },
+  {
+    label: "Paragraph",
+    icon: Type,
+    action: setParagraph,
+    isActive: () => isActive("paragraph"),
+  },
+  {
+    label: "Heading 1",
+    icon: Heading1,
+    action: () => setHeading(1),
+    isActive: () => isActive("heading", { level: 1 }),
+  },
+  {
+    label: "Heading 2",
+    icon: Heading2,
+    action: () => setHeading(2),
+    isActive: () => isActive("heading", { level: 2 }),
+  },
+  {
+    label: "Heading 3",
+    icon: Heading3,
+    action: () => setHeading(3),
+    isActive: () => isActive("heading", { level: 3 }),
+  },
+  {
+    label: "Bullet List",
+    icon: List,
+    action: toggleBullet,
+    isActive: () => isActive("bulletList"),
+  },
+  {
+    label: "Ordered List",
+    icon: ListOrdered,
+    action: toggleOrdered,
+    isActive: () => isActive("orderedList"),
+  },
+  {
+    label: "Quote",
+    icon: Quote,
+    action: toggleBlockquote,
+    isActive: () => isActive("blockquote"),
+  },
+  {
+    label: "Code Block",
+    icon: FileText,
+    action: toggleCodeBlock,
+    isActive: () => isActive("codeBlock"),
+  },
+  {
+    label: "Horizontal Rule",
+    icon: Minus,
+    action: setHr,
+    isActive: () => false,
+  }, // HR doesn't have active state
+]);
 
 const tableButtons = [
   { label: "Insert Table", icon: TableIcon, action: insertTable },
@@ -335,7 +410,12 @@ const tableButtons = [
         :key="i"
         type="button"
         :title="btn.label"
-        class="rounded p-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+        :class="[
+          'rounded p-2 text-sm transition-colors',
+          btn.isActive()
+            ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+            : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+        ]"
         @click="btn.action()"
       >
         <component :is="btn.icon" :size="16" />
@@ -381,35 +461,60 @@ const tableButtons = [
       >
         <button
           title="Bold"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('bold')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="toggleBold"
         >
           <Bold :size="16" />
         </button>
         <button
           title="Italic"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('italic')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="toggleItalic"
         >
           <Italic :size="16" />
         </button>
         <button
           title="Underline"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('underline')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="toggleUnderline"
         >
           <UnderlineIcon :size="16" />
         </button>
         <button
           title="Strikethrough"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('strike')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="toggleStrike"
         >
           <Strikethrough :size="16" />
         </button>
         <button
           title="Link"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('link')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="toggleLink"
         >
           <LinkIcon :size="16" />
@@ -427,35 +532,60 @@ const tableButtons = [
       >
         <button
           title="Paragraph"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('paragraph')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="setParagraph"
         >
           <Type :size="16" />
         </button>
         <button
           title="Heading 1"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('heading', { level: 1 })
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="() => setHeading(1)"
         >
           <Heading1 :size="16" />
         </button>
         <button
           title="Heading 2"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('heading', { level: 2 })
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="() => setHeading(2)"
         >
           <Heading2 :size="16" />
         </button>
         <button
           title="Bullet List"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('bulletList')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="toggleBullet"
         >
           <List :size="16" />
         </button>
         <button
           title="Ordered List"
-          class="rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          :class="[
+            'rounded p-2 transition-colors',
+            isActive('orderedList')
+              ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-600 dark:text-neutral-100'
+              : 'hover:bg-neutral-100 dark:hover:bg-neutral-700',
+          ]"
           @click="toggleOrdered"
         >
           <ListOrdered :size="16" />
