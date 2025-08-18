@@ -1,5 +1,5 @@
 {
-  "name": "@fahim525/tiptap-vue",
+  "name": "editor-vue-plugin",
   "version": "0.1.1",
   "type": "module",
   "main": "dist/index.cjs",
