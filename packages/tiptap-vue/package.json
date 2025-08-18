@@ -1,20 +1,39 @@
 {
-  "name": "@crafely/tiptap-vue",
+  "name": "@fahim525/tiptap-vue",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
+  "keywords": [
+    "vue",
+    "tiptap",
+    "editor",
+    "wysiwyg",
+    "rich-text",
+    "typescript"
+  ],
+  "author": "Fahim <fahim@crafely.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/crafely/tiptap-vue#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crafely/tiptap-vue.git"
+  },
+  "bugs": {
+    "url": "https://github.com/crafely/tiptap-vue/issues"
+  },
   "scripts": {
     "build": "tsup src/index.ts --dts --format cjs,esm --clean",
     "dev": "tsup src/index.ts --dts --format cjs,esm --watch --sourcemap"

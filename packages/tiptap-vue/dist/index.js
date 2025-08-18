@@ -207,6 +207,7 @@ var defaultItems = (editor) => [
 var SlashCommand = Extension.create({
   name: "slashCommand",
   addOptions() {
+    console.log("\u{1F3AF} SlashCommand extension created!");
     debugLog("SlashCommand created");
     return {
       suggestion: {},
