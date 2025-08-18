@@ -1,6 +1,6 @@
 {
   "name": "@fahim525/tiptap-vue",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -10,10 +10,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./TiptapEditor": {
+      "types": "./src/ui/TiptapEditor.vue",
+      "import": "./src/ui/TiptapEditor.vue",
+      "require": "./src/ui/TiptapEditor.vue"
     }
   },
   "files": [
     "dist",
+    "src",
     "README.md"
   ],
   "keywords": [

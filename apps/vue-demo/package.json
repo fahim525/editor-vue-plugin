@@ -9,7 +9,7 @@
     "preview": "vite preview --port 5173"
   },
   "dependencies": {
-    "@crafely/tiptap-vue": "^0.1.0",
+    "@fahim525/tiptap-vue": "^0.1.1",
     "@tiptap/core": "^2.8.0",
     "@tiptap/extension-code-block-lowlight": "^2.8.0",
     "@tiptap/extension-color": "^2.8.0",
